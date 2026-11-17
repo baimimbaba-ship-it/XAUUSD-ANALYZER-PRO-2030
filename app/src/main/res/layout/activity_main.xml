@@ -26,86 +26,52 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="MARKET PRICE"
-            android:textAllCaps="true"
+            android:text="XAUUSD · BiQuote REST"
             android:textColor="#93C5FD"
-            android:textSize="12sp" />
+            android:textSize="13sp" />
 
         <TextView
             android:id="@+id/priceText"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="0.00"
+            android:layout_marginTop="12dp"
+            android:text="—"
             android:textColor="#F8FAFC"
-            android:textSize="32sp"
+            android:textSize="30sp"
             android:textStyle="bold" />
 
-        <LinearLayout
+        <TextView
+            android:id="@+id/bidText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:orientation="horizontal">
+            android:layout_marginTop="12dp"
+            android:text="Bid: —"
+            android:textColor="#CBD5E1" />
 
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Change"
-                android:textColor="#CBD5E1" />
-
-            <TextView
-                android:id="@+id/changeText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="0.00%"
-                android:textColor="#34D399"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <LinearLayout
+        <TextView
+            android:id="@+id/askText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:orientation="horizontal">
+            android:layout_marginTop="6dp"
+            android:text="Ask: —"
+            android:textColor="#CBD5E1" />
 
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Trend"
-                android:textColor="#CBD5E1" />
-
-            <TextView
-                android:id="@+id/trendText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="BULLISH"
-                android:textColor="#FBBF24"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <LinearLayout
+        <TextView
+            android:id="@+id/spreadText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:orientation="horizontal">
+            android:layout_marginTop="6dp"
+            android:text="Spread: —"
+            android:textColor="#CBD5E1" />
 
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Volume"
-                android:textColor="#CBD5E1" />
-
-            <TextView
-                android:id="@+id/volumeText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="0"
-                android:textColor="#F8FAFC"
-                android:textStyle="bold" />
-        </LinearLayout>
+        <TextView
+            android:id="@+id/timestampText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Waiting for quote"
+            android:textColor="#94A3B8"
+            android:textSize="12sp" />
     </LinearLayout>
 
     <LinearLayout
@@ -118,39 +84,18 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="SIGNAL"
-            android:textAllCaps="true"
+            android:text="CONNECTION STATUS"
             android:textColor="#93C5FD"
             android:textSize="12sp" />
 
         <TextView
-            android:id="@+id/signalText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:text="WAIT"
-            android:textColor="#F8FAFC"
-            android:textSize="26sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/scoreText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="0/100"
-            android:textColor="#A7F3D0"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/reasonText"
+            android:id="@+id/statusText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="Pasar sedang menunggu konfirmasi."
-            android:textColor="#E2E8F0"
-            android:textSize="14sp" />
+            android:layout_marginTop="8dp"
+            android:text="DISCONNECTED"
+            android:textColor="#F8FAFC"
+            android:textStyle="bold" />
     </LinearLayout>
 
     <Button
@@ -159,7 +104,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="18dp"
         android:backgroundTint="#F59E0B"
-        android:text="Refresh Signal"
+        android:text="REFRESH"
         android:textColor="#0F172A"
         android:textStyle="bold" />
 </LinearLayout>
