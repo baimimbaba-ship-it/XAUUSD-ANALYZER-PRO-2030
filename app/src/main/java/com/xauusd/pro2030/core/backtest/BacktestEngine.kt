@@ -1,4 +1,4 @@
-package com.xauusd.pro2030.core/backtest
+package com.xauusd.pro2030.core.backtest
 
 import com.xauusd.pro2030.model.Candle
 
@@ -19,12 +19,13 @@ class BacktestEngine {
         var entry: Candle? = null
         val trades = mutableListOf<Trade>()
         bars.forEachIndexed { index, candle ->
-            val action = strategy(bars.take(index), candle)
-            val desired = action.takeIf { it != Action.FLAT }
+            val desired = strategy(bars.take(index), candle).takeIf { it != Action.FLAT }
             if (position != desired && position != null && entry != null) {
-                val sign = if (position == Action.LONG) 1.0 else -1.0
-                val points = (candle.close - entry!!.close) * sign - costPerSidePoints * 2.0
-                trades += Trade(entry!!.openTimeMillis, candle.closeTimeMillis, position!!, entry!!.close, candle.close, points)
+                val openCandle = requireNotNull(entry)
+                val oldPosition = requireNotNull(position)
+                val sign = if (oldPosition == Action.LONG) 1.0 else -1.0
+                val points = (candle.close - openCandle.close) * sign - costPerSidePoints * 2.0
+                trades += Trade(openCandle.openTimeMillis, candle.closeTimeMillis, oldPosition, openCandle.close, candle.close, points)
                 entry = null
             }
             if (position != desired) {
