@@ -97,12 +97,8 @@ class BiQuoteConnectionEngine(
         try {
             val tick = requestAndParse()
             retryAttempt = 0
-            val fresh = tick.marketState.equals("open", ignoreCase = true) &&
-                tick.quoteAgeSeconds <= staleAfterSeconds
-            val status = if (fresh) Status.LIVE else Status.STALE
-            val detail = if (fresh) "Quote fresh" else {
-                "Quote not current (market=${tick.marketState}, age=${tick.quoteAgeSeconds}s)"
-            }
+            val status = classifyStatus(tick, staleAfterSeconds)
+            val detail = statusDetail(tick, staleAfterSeconds)
             Log.i(TAG, "BiQuote response received: status=$status age=${tick.quoteAgeSeconds}s")
             publish(State(status, tick, detail))
             scheduleNext(pollIntervalSeconds)
@@ -129,48 +125,10 @@ class BiQuoteConnectionEngine(
                 throw IOException("BiQuote HTTP $responseCode: ${body.take(200)}")
             }
             val body = connection.inputStream.bufferedReader().use { it.readText() }
-            val json = JSONObject(body)
-            val symbol = json.optString("symbol", "").uppercase()
-            if (symbol != "XAUUSD") throw IllegalArgumentException("Unexpected or missing symbol in response")
-
-            val mid = json.optDouble("mid", Double.NaN)
-            if (!mid.isFinite() || mid <= 0.0) throw IllegalArgumentException("Missing or invalid mid price")
-            val marketState = json.optString("marketState", "unknown")
-            if (!json.has("quoteAgeSeconds") || json.isNull("quoteAgeSeconds")) {
-                throw IllegalArgumentException("Missing quoteAgeSeconds; cannot establish quote freshness")
-            }
-            val age = json.optLong("quoteAgeSeconds", -1L)
-            if (age < 0L) throw IllegalArgumentException("Invalid quoteAgeSeconds")
-            if (!json.has("stale") || json.isNull("stale")) {
-                throw IllegalArgumentException("Missing stale flag; cannot establish quote freshness")
-            }
-            val explicitlyStale = json.optBoolean("stale", true)
-
-            val bid = optionalPositiveNumber(json, "bid")
-            val ask = optionalPositiveNumber(json, "ask")
-            val receivedAt = System.currentTimeMillis()
-
-            return Tick(
-                symbol = symbol,
-                mid = mid,
-                bid = bid,
-                ask = ask,
-                marketState = if (explicitlyStale) "stale" else marketState,
-                quoteAgeSeconds = age,
-                // BiQuote SDK documents marketState/stale/quoteAgeSeconds but does not
-                // document a stable source timestamp field in the verified contract.
-                sourceTimestampMillis = null,
-                receivedTimestampMillis = receivedAt
-            )
+            return parseTick(body)
         } finally {
             connection.disconnect()
         }
-    }
-
-    private fun optionalPositiveNumber(json: JSONObject, field: String): Double? {
-        if (!json.has(field) || json.isNull(field)) return null
-        val value = json.optDouble(field, Double.NaN)
-        return value.takeIf { it.isFinite() && it > 0.0 }
     }
 
     private fun scheduleRetry(status: Status, error: Exception) {
@@ -197,5 +155,60 @@ class BiQuoteConnectionEngine(
     companion object {
         private const val TAG = "BiQuoteConnection"
         private const val MAX_RETRY_SECONDS = 60L
+
+        fun parseTick(body: String, nowMillis: Long = System.currentTimeMillis()): Tick {
+            val json = JSONObject(body)
+            val symbol = json.optString("symbol", "").uppercase()
+            if (symbol != "XAUUSD") throw IllegalArgumentException("Unexpected or missing symbol in response")
+
+            val mid = json.optDouble("mid", Double.NaN)
+            if (!mid.isFinite() || mid <= 0.0) throw IllegalArgumentException("Missing or invalid mid price")
+
+            val marketState = json.optString("marketState", "unknown")
+            if (!json.has("quoteAgeSeconds") || json.isNull("quoteAgeSeconds")) {
+                throw IllegalArgumentException("Missing quoteAgeSeconds; cannot establish quote freshness")
+            }
+            val age = json.optLong("quoteAgeSeconds", -1L)
+            if (age < 0L) throw IllegalArgumentException("Invalid quoteAgeSeconds")
+            if (!json.has("stale") || json.isNull("stale")) {
+                throw IllegalArgumentException("Missing stale flag; cannot establish quote freshness")
+            }
+            val explicitlyStale = json.optBoolean("stale", true)
+
+            val bid = optionalPositiveNumber(json, "bid")
+            val ask = optionalPositiveNumber(json, "ask")
+
+            return Tick(
+                symbol = symbol,
+                mid = mid,
+                bid = bid,
+                ask = ask,
+                marketState = if (explicitlyStale) "stale" else marketState,
+                quoteAgeSeconds = age,
+                sourceTimestampMillis = null,
+                receivedTimestampMillis = nowMillis
+            )
+        }
+
+        fun classifyStatus(tick: Tick, staleAfterSeconds: Long): Status {
+            val fresh = tick.marketState.equals("open", ignoreCase = true) &&
+                tick.quoteAgeSeconds <= staleAfterSeconds
+            return if (fresh) Status.LIVE else Status.STALE
+        }
+
+        fun statusDetail(tick: Tick, staleAfterSeconds: Long): String {
+            val fresh = classifyStatus(tick, staleAfterSeconds) == Status.LIVE
+            return if (fresh) {
+                "Quote fresh"
+            } else {
+                "Quote not current (market=${tick.marketState}, age=${tick.quoteAgeSeconds}s)"
+            }
+        }
+
+        private fun optionalPositiveNumber(json: JSONObject, field: String): Double? {
+            if (!json.has(field) || json.isNull(field)) return null
+            val value = json.optDouble(field, Double.NaN)
+            return value.takeIf { it.isFinite() && it > 0.0 }
+        }
     }
 }
